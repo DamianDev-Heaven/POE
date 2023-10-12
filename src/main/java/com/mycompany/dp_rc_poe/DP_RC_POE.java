@@ -6,11 +6,8 @@
 package com.mycompany.dp_rc_poe;
 
 import Vista.MDI;
+//PRIMER CAMBIO DESPUES DE SUBIRLO A GITHUB
 
-/**
- *
- * @author Josue
- */
 public class DP_RC_POE {
 
     public static void main(String[] args) {
