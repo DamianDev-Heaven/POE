@@ -13,7 +13,7 @@ public class Conexion {
         try
         {
             Class.forName("org.mariadb.jdbc.Driver");
-            this.oCon= DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/poe",
+            this.oCon= DriverManager.getConnection("jdbc:mariadb://127.0.0.1:3306/poelab",
                     pUsuario,pClave);
         }
         catch(Exception ee)

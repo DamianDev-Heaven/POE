@@ -8,6 +8,7 @@ import db.Conexion;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,50 +17,75 @@ import java.util.logging.Logger;
  * @author Josue
  */
 public class Control {
-    
-    int id_control;
-    String id_factura;
-    int cantP;
-    String moneda;
-    double efectivo;
-    Conexion oCnn;
+    private String codigo;
+    private double total;
+    private double efectivo_recibido;
+    private double cambio;
+    private Conexion oCnn;
 
-    public Control(int id_control, String id_factura, int cantP, String moneda, double efectivo, Conexion oCnn) {
-        this.id_control = id_control;
-        this.id_factura = id_factura;
-        this.cantP = cantP;
-        this.moneda = moneda;
-        this.efectivo = efectivo;
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public double getEfectivo_recibido() {
+        return efectivo_recibido;
+    }
+
+    public void setEfectivo_recibido(double efectivo_recibido) {
+        this.efectivo_recibido = efectivo_recibido;
+    }
+
+    public double getCambio() {
+        return cambio;
+    }
+
+    public void setCambio(double cambio) {
+        this.cambio = cambio;
+    }
+
+    public Control(Conexion oCnn) {
         this.oCnn = oCnn;
     }
-    public Control(Conexion pCon)
-    {
-        this.oCnn= pCon;
-    }
-    public void guardar()
-    {
-        try
-        {
-            String DatosF = "insert into control(id_control, codigo, cantP, moneda, efectivo)"
-                           + " values (?, ?, ?, ?, ?)";
-      
-            PreparedStatement pst = this.oCnn.oCon.prepareStatement(DatosF);
-            pst.setInt(1, this.getId_control());
-            pst.setString(2, this.getId_factura());
-            pst.setInt(3, this.getCantP());
-            pst.setString(4, this.getMoneda());
-            pst.setDouble(5, this.getEfectivo());
-            pst.execute();
-        }
-        catch(Exception ee)
-        {
-            Logger.getLogger(Control.class.getName()).log(Level.SEVERE, null, ee);
 
+    public Control(String codigo, double total, double efectivo_recibido, double cambio, Conexion oCnn) {
+        this.codigo = codigo;
+        this.total = total;
+        this.efectivo_recibido = efectivo_recibido;
+        this.cambio = cambio;
+        this.oCnn = oCnn;
+    }
+
+    public void guardar() {
+        try {
+            String query = "INSERT INTO control (codigo, total, efectivo_recibido, cambio) VALUES (?, ?, ?, ?)";
+
+            PreparedStatement pst = this.oCnn.oCon.prepareStatement(query);
+            pst.setString(1, codigo);
+            pst.setDouble(2, total);
+            pst.setDouble(3, efectivo_recibido);
+            pst.setDouble(4, cambio);
+
+            pst.execute();
+        } catch (SQLException e) {
+            Logger.getLogger(Control.class.getName()).log(Level.SEVERE, null, e);
         }
     }
+
     public ResultSet getFecha(Date fecha) {
     try {
-        String datosF = "SELECT co.id_control , co.codigo, co.cantP, co.moneda, co.efectivo FROM control co JOIN factura fa ON fa.codigo = co.codigo WHERE fa.fecha = ?;";
+        String datosF = "SELECT c.codigo, c.total, c.efectivo_recibido, c.cambio, f.fecha FROM control c JOIN factura f ON c.codigo = f.codigo WHERE f.fecha = ?";
         PreparedStatement preparedStatement = this.oCnn.oCon.prepareStatement(datosF);
         // Sustituimos el parámetro por el valor proporcionado
         preparedStatement.setDate(1, (java.sql.Date) fecha);
@@ -68,47 +94,5 @@ public class Control {
         ee.printStackTrace(); // Manejo de errores, imprime la traza en la consola
         return null;
         }
-    }
-    
-    
-
-    public int getId_control() {
-        return id_control;
-    }
-
-    public void setId_control(int id_control) {
-        this.id_control = id_control;
-    }
-
-    public String getId_factura() {
-        return id_factura;
-    }
-
-    public void setId_factura(String id_factura) {
-        this.id_factura = id_factura;
-    }
-
-    public int getCantP() {
-        return cantP;
-    }
-
-    public void setCantP(int cantP) {
-        this.cantP = cantP;
-    }
-
-    public String getMoneda() {
-        return moneda;
-    }
-
-    public void setMoneda(String moneda) {
-        this.moneda = moneda;
-    }
-
-    public double getEfectivo() {
-        return efectivo;
-    }
-
-    public void setEfectivo(double efectivo) {
-        this.efectivo = efectivo;
     }
 }

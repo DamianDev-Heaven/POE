@@ -3,8 +3,7 @@ import db.*;
 import Entidad.*;
 
 import java.util.ArrayList;
-import java.util.Date;
-import javax.swing.JDesktopPane;
+import java.util.Random;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -32,7 +31,12 @@ public class Factura extends javax.swing.JInternalFrame {
     private double saldoAntesCerrar;
     private double saldoInicialOriginal;
     private ControlCaja objCaja;
-    
+    private double cambioUSD = 1.0;
+    private double cambioHNL = 24.0; //LEMPIRAS
+    private double cambioNIO = 35.0; //CORDOBAS
+    private double cambioEUR = 0.85; //EUROS
+    private double cambioGTQ = 7.8; //QUETZALES
+   
     public Factura() {
         initComponents();
         oCnx= new Conexion("admin","RBK");
@@ -42,6 +46,8 @@ public class Factura extends javax.swing.JInternalFrame {
         initComponents();
         this.sal = saldoInicial;
         this.saldoInicialOriginal = saldoInicial;
+        
+        mostrarCodigoAleatorio();
         oCnx= new Conexion("admin","RBK");
         modelF = (DefaultTableModel) this.tableF.getModel();
     }
@@ -52,8 +58,7 @@ public class Factura extends javax.swing.JInternalFrame {
         this.productos = produ;
         this.listar();
         oCnx= new Conexion("admin","RBK");
-        factura = new factura(txtFecha, oCnx, txtCodigo);
-        factura.mostrarCodigo();
+        mostrarCodigoAleatorio();
         //this.saldoInicial = String.valueOf(saldoInicial);
         //inicial.setText(this.saldoInicial);
         this.productosVacios = produ.isEmpty();
@@ -67,6 +72,16 @@ public class Factura extends javax.swing.JInternalFrame {
 
         }
     }   
+    private String generarCodigoAleatorio() {
+        Random rand = new Random();
+        int numeroAleatorio = rand.nextInt(1000) + 10000;
+        return String.format("31DC-%04d", numeroAleatorio);
+    }
+
+    public void mostrarCodigoAleatorio() {
+        String codigoAleatorio = generarCodigoAleatorio();
+        txtCodigo.setText(codigoAleatorio);
+    }
     
     private void actualizarDatosComprobante() {
     String codigo = this.txtCodigo.getText().trim();
@@ -491,10 +506,27 @@ public class Factura extends javax.swing.JInternalFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     this.oCnx= new Conexion("admin","RBK");
     double montoCliente = (double) spnEfectivo.getValue();
+    mostrarCodigoAleatorio();
     String codigo = this.txtCodigo.getText().trim();
     String fecha = ((JTextField)this.txtFecha.getDateEditor().getUiComponent()).getText();  // Obtén la fecha directamente desde el componente JDateChooser
     double total = Double.parseDouble(this.txtTotal.getText().trim());
     String moneda = this.cmbMoneda.getSelectedItem().toString();
+    double totalFactura = Double.parseDouble(txtTotal.getText());
+    
+    if (moneda == null || moneda.equals("Seleccione una moneda")) {
+        JOptionPane.showMessageDialog(this, "Por favor, seleccione una moneda.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    if (montoCliente < totalFactura) {
+        JOptionPane.showMessageDialog(this, "El monto proporcionado es insuficiente. Faltan fondos.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    
+    if (fecha == null || fecha.isEmpty()){
+        JOptionPane.showMessageDialog(this, "Por favor ", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    saldoAntesCerrar = Double.parseDouble(inicial.getText());
     double mA = 0;
     if( moneda.equals("Lempira")){
         mA = montoCliente / 24.0;
@@ -502,36 +534,29 @@ public class Factura extends javax.swing.JInternalFrame {
 
     
     GestorProdDAO ges = new GestorProdDAO(oCnx.oCon);
-    double totalFactura = Double.parseDouble(txtTotal.getText());
+    
 
-    if (montoCliente < totalFactura) {
-        JOptionPane.showMessageDialog(this, "El monto proporcionado es insuficiente. Faltan fondos.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    //String moneda = (String) cmbMoneda.getSelectedItem();
-    if (moneda == null || moneda.equals("Seleccione una moneda")) {
-        JOptionPane.showMessageDialog(this, "Por favor, seleccione una moneda.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-    if (fecha == null || fecha.isEmpty()){
-        JOptionPane.showMessageDialog(this, "Por favor ", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
        
     calcularCambio(mA, total);
             Comprobante objf = new Comprobante(codigo,java.sql.Date.
                     valueOf(fecha), total, this.oCnx);
-        objf.guardar();  
+        objf.guardar(); 
+    Control crtl = new Control(oCnx);
+    crtl.setTotal(total);
+    crtl.setEfectivo_recibido(montoCliente);
+    crtl.setCambio(cambioEnDolares);
+    crtl.setCodigo(txtCodigo.getText());
+    
+    crtl.guardar();
         //dispose();
       this.limpiartabla();
         
     }//GEN-LAST:event_jButton1ActionPerformed
-    
+    double cambioEnDolares;
     private void calcularCambio(double montoCliente, double total) {
     GestorProdDAO gestor = new GestorProdDAO(oCnx.oCon);
 
-    double cambioEnDolares = montoCliente - total;
+    cambioEnDolares = montoCliente - total;
     double saldoAntesCompra = Double.parseDouble(inicial.getText());
 
     double saldoDespuesCompra = saldoAntesCompra + cambioEnDolares;
@@ -562,11 +587,12 @@ public class Factura extends javax.swing.JInternalFrame {
         //GestorProdDAO gestor = new GestorProdDAO(oCnx.oCon);
         int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro que desea cerrar la caja?", "Confirmar cierre de caja", JOptionPane.YES_NO_OPTION);
             saldoInicialOriginal = sal;
-            saldoAntesCerrar = Double.parseDouble(inicial.getText());
+            
             //objCaja = new ControlCaja(saldoInicialOriginal, saldoAntesCerrar);
             //objCaja.setSaldoAntesCerrarLabel(saldoAntesCerrar);
             //objCaja.setSaldoInicialOriginalLabel(saldoInicialOriginal);
         if (confirmacion == JOptionPane.YES_OPTION) {
+            //Manda el saldo inicial y como se quedo el saldo a directamente y de un solo a control de caja (MAL HECHO)
             objCaja = new ControlCaja(saldoInicialOriginal, saldoAntesCerrar);
             objCaja.setSaldoAntesCerrarLabel(saldoAntesCerrar);
             objCaja.setSaldoInicialOriginalLabel(saldoInicialOriginal);
@@ -587,8 +613,8 @@ public class Factura extends javax.swing.JInternalFrame {
         String mone = this.cmbMoneda.getSelectedItem().toString();
         double efec = Double.parseDouble(this.spnEfectivo.getValue().toString());
         
-        Control objC = new Control(id, codigo, can, mone, efec, this.oCnx);
-        objC.guardar();
+        //Control objC = new Control(id, codigo, can, mone, efec, this.oCnx);
+        //objC.guardar();
         
         //Caja caja = new Caja();
        // MDI.desktopPane.add(caja);

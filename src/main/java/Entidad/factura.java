@@ -21,7 +21,7 @@ public class factura {
     private Conexion conexion;
     private JLabel lblFact;
     private ArrayList<DetalleFactura> detallesFactura;
-    
+
     public int getCodigoFactura() {
         return codigoFactura;
     }

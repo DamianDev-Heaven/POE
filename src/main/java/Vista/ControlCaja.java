@@ -36,8 +36,9 @@ public class ControlCaja extends javax.swing.JInternalFrame {
     }
     public ControlCaja(double saldoAntesCerrar, double saldoInicialOriginal) {
         initComponents();
-        oCnx = new Conexion("root", "cruzpolanco32");
+        oCnx = new Conexion("admin", "RBK");
         model = (DefaultTableModel) this.tableControl.getModel();
+        fac = new Factura();
         this.saldoAntesCerrar = saldoAntesCerrar;  // Set saldoAntesCerrar
         this.saldoInicialOriginal = saldoInicialOriginal;  // Set saldoInicialOriginal
 
@@ -89,13 +90,13 @@ public class ControlCaja extends javax.swing.JInternalFrame {
 
         tableControl.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
             },
             new String [] {
-                "No", "Cantidad", "Total", "Moneda", "Efectivo"
+                "Codigo", "Total", "Recibido", "Cambio"
             }
         ));
         jScrollPane1.setViewportView(tableControl);
@@ -133,10 +134,11 @@ public class ControlCaja extends javax.swing.JInternalFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReporteActionPerformed
-        //double saldoAntesCerrar = fac.getSaldoAntesCerrar();
-        //double saldoInicial = fac.getSaldoInicial();
-        //jLabel5.setText(String.valueOf(saldoInicial));
-        //jLabel7.setText(String.valueOf(saldoAntesCerrar));
+        double saldoAntesCerrar = fac.getSaldoAntesCerrar();
+        double saldoInicial = fac.getSaldoInicial();
+        jLabel5.setText(String.valueOf(saldoInicial));
+        jLabel7.setText(String.valueOf(saldoAntesCerrar));
+        
         String fecha = ((JTextField)this.txtFecha.getDateEditor().getUiComponent()).getText();
         
         //Instancio Producto y le mando la conexion
@@ -154,9 +156,10 @@ public class ControlCaja extends javax.swing.JInternalFrame {
                                 rs.getObject(2).toString(),
                                 rs.getObject(3).toString(),
                                 rs.getObject(4).toString(),
-                                rs.getObject(5).toString()};
+                                //rs.getObject(5).toString()
+                                };
               model.addRow(Datos);
-              reporte = reporte + Double.parseDouble(rs.getObject(5).toString());
+              reporte = reporte + Double.parseDouble(rs.getObject(4).toString());
             }
             this.txtReporte.setText(String.format("%.2f",reporte));
            this.tableControl.setModel(model);
