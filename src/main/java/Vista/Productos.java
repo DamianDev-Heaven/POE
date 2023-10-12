@@ -232,7 +232,7 @@ public class Productos extends javax.swing.JInternalFrame {
            this.tableP.setModel(model);
         }
         catch(Exception ee) {}   
-
+        //
     }//GEN-LAST:event_cmbCompraActionPerformed
 
     private void cmbCompraItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbCompraItemStateChanged
